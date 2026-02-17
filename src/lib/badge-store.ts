@@ -1,0 +1,197 @@
+'use client';
+
+import { Badge, BadgeElement, BadgeSide, BadgeSegment, AttributeRule, DEFAULT_ELEMENT_STYLES } from '@/types/badge';
+import { v4 as uuidv4 } from 'uuid';
+
+const STORAGE_KEY = 'badge-printing-badges';
+
+export function getAllBadges(): Badge[] {
+  if (typeof window === 'undefined') return [];
+  const data = localStorage.getItem(STORAGE_KEY);
+  return data ? JSON.parse(data) : [];
+}
+
+export function getBadgeById(id: string): Badge | null {
+  const badges = getAllBadges();
+  return badges.find((b) => b.id === id) || null;
+}
+
+export function saveBadge(badge: Badge): Badge {
+  const badges = getAllBadges();
+  const index = badges.findIndex((b) => b.id === badge.id);
+  const updated = { ...badge, updatedAt: new Date().toISOString() };
+  if (index >= 0) {
+    badges[index] = updated;
+  } else {
+    badges.push(updated);
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(badges));
+  return updated;
+}
+
+export function deleteBadge(id: string): void {
+  const badges = getAllBadges().filter((b) => b.id !== id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(badges));
+}
+
+/**
+ * Creates the default template elements for the "Front" and "Back" panels.
+ * Both panels share the same layout:
+ * - Dark header bar with event logo placeholder
+ * - Attendee name (dynamic)
+ * - Job title (dynamic)
+ * - Company (dynamic)
+ * - QR Code
+ * - Footer bar with event hashtag
+ */
+function el(overrides: Partial<BadgeElement> & { id: string; type: BadgeElement['type']; side: BadgeSide }): BadgeElement {
+  return {
+    x: 0, y: 0, width: 50, height: 10,
+    rotation: 0, locked: false, visible: true,
+    ...DEFAULT_ELEMENT_STYLES,
+    ...overrides,
+  } as BadgeElement;
+}
+
+function createTemplateElements(): BadgeElement[] {
+  return [
+    // ──────────── FRONT PANEL ────────────
+
+    // Header bar (dark navy)
+    el({ id: uuidv4(), type: 'shape', side: 'front', shapeType: 'rectangle',
+      x: 0, y: 0, width: 100, height: 18, backgroundColor: '#1a1f3d', color: '#1a1f3d' }),
+    // Event logo placeholder (in header)
+    el({ id: uuidv4(), type: 'image', side: 'front',
+      x: 10, y: 2, width: 80, height: 14, imageUrl: '', imageFit: 'contain' }),
+    // Attendee Name
+    el({ id: uuidv4(), type: 'dynamic-field', side: 'front', dynamicField: 'attendee_name',
+      content: 'JOHN DOE', x: 5, y: 24, width: 90, height: 10,
+      fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
+    // Job Title
+    el({ id: uuidv4(), type: 'dynamic-field', side: 'front', dynamicField: 'attendee_title',
+      content: 'HR Manager', x: 10, y: 35, width: 80, height: 7,
+      fontSize: 14, fontWeight: 'normal', textAlign: 'center', color: '#4b5563' }),
+    // Company
+    el({ id: uuidv4(), type: 'dynamic-field', side: 'front', dynamicField: 'attendee_company',
+      content: 'idloom Inc.', x: 10, y: 42, width: 80, height: 7,
+      fontSize: 14, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
+    // QR Code
+    el({ id: uuidv4(), type: 'qr-code', side: 'front',
+      content: 'https://example.com/attendee/REG-001234',
+      x: 30, y: 54, width: 40, height: 30 }),
+    // Footer bar
+    el({ id: uuidv4(), type: 'shape', side: 'front', shapeType: 'rectangle',
+      x: 0, y: 90, width: 100, height: 10, backgroundColor: '#1a1f3d', color: '#1a1f3d' }),
+    // Footer text
+    el({ id: uuidv4(), type: 'text', side: 'front', content: '#YourEvent2025',
+      x: 10, y: 91, width: 80, height: 8,
+      fontSize: 12, fontWeight: 'bold', textAlign: 'center', color: '#ffffff' }),
+
+    // ──────────── BACK PANEL (same layout as front) ────────────
+
+    // Header bar (dark navy)
+    el({ id: uuidv4(), type: 'shape', side: 'back', shapeType: 'rectangle',
+      x: 0, y: 0, width: 100, height: 18, backgroundColor: '#1a1f3d', color: '#1a1f3d' }),
+    // Event logo placeholder (in header)
+    el({ id: uuidv4(), type: 'image', side: 'back',
+      x: 10, y: 2, width: 80, height: 14, imageUrl: '', imageFit: 'contain' }),
+    // Attendee Name
+    el({ id: uuidv4(), type: 'dynamic-field', side: 'back', dynamicField: 'attendee_name',
+      content: 'JOHN DOE', x: 5, y: 24, width: 90, height: 10,
+      fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
+    // Job Title
+    el({ id: uuidv4(), type: 'dynamic-field', side: 'back', dynamicField: 'attendee_title',
+      content: 'HR Manager', x: 10, y: 35, width: 80, height: 7,
+      fontSize: 14, fontWeight: 'normal', textAlign: 'center', color: '#4b5563' }),
+    // Company
+    el({ id: uuidv4(), type: 'dynamic-field', side: 'back', dynamicField: 'attendee_company',
+      content: 'idloom Inc.', x: 10, y: 42, width: 80, height: 7,
+      fontSize: 14, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
+    // QR Code
+    el({ id: uuidv4(), type: 'qr-code', side: 'back',
+      content: 'https://example.com/attendee/REG-001234',
+      x: 30, y: 54, width: 40, height: 30 }),
+    // Footer bar
+    el({ id: uuidv4(), type: 'shape', side: 'back', shapeType: 'rectangle',
+      x: 0, y: 90, width: 100, height: 10, backgroundColor: '#1a1f3d', color: '#1a1f3d' }),
+    // Footer text
+    el({ id: uuidv4(), type: 'text', side: 'back', content: '#YourEvent2025',
+      x: 10, y: 91, width: 80, height: 8,
+      fontSize: 12, fontWeight: 'bold', textAlign: 'center', color: '#ffffff' }),
+  ];
+}
+
+export function createNewBadge(name: string, segments: BadgeSegment[], attributeRules: AttributeRule[]): Badge {
+  const badge: Badge = {
+    id: uuidv4(),
+    name,
+    segments,
+    attributeRules,
+    isActive: false,
+    layout: 'foldable-ticket',
+    elements: createTemplateElements(),
+    panelBackgrounds: {},
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  return saveBadge(badge);
+}
+
+export function createDefaultElement(
+  type: BadgeElement['type'],
+  side: BadgeSide,
+  overrides?: Partial<BadgeElement>
+): BadgeElement {
+  const base: BadgeElement = {
+    id: uuidv4(),
+    type,
+    x: 25,
+    y: 25,
+    width: 50,
+    height: 10,
+    rotation: 0,
+    side,
+    locked: false,
+    visible: true,
+    ...DEFAULT_ELEMENT_STYLES,
+    ...overrides,
+  };
+
+  switch (type) {
+    case 'text':
+      return { ...base, content: 'New Text', fontSize: 16, height: 8 };
+    case 'dynamic-field':
+      return {
+        ...base,
+        dynamicField: 'attendee_name',
+        content: 'JOHN DOE',
+        fontSize: 20,
+        fontWeight: 'bold',
+        height: 10,
+      };
+    case 'image':
+      return { ...base, height: 20, imageFit: 'contain', imageUrl: '' };
+    case 'qr-code':
+      return { ...base, width: 25, height: 25, content: 'https://example.com' };
+    case 'shape':
+      return {
+        ...base,
+        shapeType: 'rectangle',
+        backgroundColor: '#e5e7eb',
+        width: 100,
+        height: 8,
+        x: 0,
+      };
+    default:
+      return base;
+  }
+}
+
+export function duplicateElement(element: BadgeElement): BadgeElement {
+  return {
+    ...element,
+    id: uuidv4(),
+    x: Math.min(element.x + 3, 90),
+    y: Math.min(element.y + 3, 90),
+  };
+}
