@@ -109,10 +109,6 @@ export default function PropertiesPanel({
           <NumberInput label="W %" value={element.width} onChange={(v) => onUpdate({ width: v })} min={1} max={100} step={0.5} />
           <NumberInput label="H %" value={element.height} onChange={(v) => onUpdate({ height: v })} min={1} max={100} step={0.5} />
         </div>
-        {element.type !== 'qr-code' && (
-          <NumberInput label="Rotation" value={element.rotation} onChange={(v) => onUpdate({ rotation: v })} min={-180} max={180} step={1} suffix="deg" />
-        )}
-        <NumberInput label="Opacity" value={(element.opacity ?? 1) * 100} onChange={(v) => onUpdate({ opacity: v / 100 })} min={0} max={100} step={5} suffix="%" />
       </Section>
 
       {/* Dynamic field selector */}
@@ -212,54 +208,14 @@ export default function PropertiesPanel({
 
       {/* QR Code */}
       {element.type === 'qr-code' && (
-        <Section title="QR Code Content">
-          <div className="flex gap-1 mb-2">
-            <button
-              onClick={() => onUpdate({ qrContentSource: 'static' })}
-              className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
-                (element.qrContentSource || 'static') === 'static'
-                  ? 'bg-indigo-50 text-indigo-600 border border-indigo-300'
-                  : 'border border-gray-200 text-gray-500 hover:bg-gray-50'
-              }`}
-            >
-              Static URL
-            </button>
-            <button
-              onClick={() => onUpdate({ qrContentSource: 'dynamic-field' })}
-              className={`flex-1 px-2 py-1.5 rounded text-xs font-medium transition-colors ${
-                element.qrContentSource === 'dynamic-field'
-                  ? 'bg-indigo-50 text-indigo-600 border border-indigo-300'
-                  : 'border border-gray-200 text-gray-500 hover:bg-gray-50'
-              }`}
-            >
-              Registration Field
-            </button>
-          </div>
-          {(element.qrContentSource || 'static') === 'static' ? (
-            <input
-              type="text"
-              value={element.content || ''}
-              onChange={(e) => onUpdate({ content: e.target.value })}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-              placeholder="URL or text for QR code..."
-            />
-          ) : (
-            <select
-              value={element.qrDynamicField || 'registration_id'}
-              onChange={(e) => {
-                const key = e.target.value as DynamicFieldKey;
-                const field = DYNAMIC_FIELD_OPTIONS.find((f) => f.key === key);
-                onUpdate({ qrDynamicField: key, content: field?.preview || '' });
-              }}
-              className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
-            >
-              {DYNAMIC_FIELD_OPTIONS.map((f) => (
-                <option key={f.key} value={f.key}>
-                  {f.label}
-                </option>
-              ))}
-            </select>
-          )}
+        <Section title="QR Code URL">
+          <input
+            type="url"
+            value={element.content || ''}
+            onChange={(e) => onUpdate({ content: e.target.value })}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+            placeholder="https://www.example.com"
+          />
         </Section>
       )}
     </div>

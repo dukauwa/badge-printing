@@ -112,7 +112,7 @@ function createTemplateElements(): BadgeElement[] {
       fontSize: 14, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
     // QR Code
     el({ id: uuidv4(), type: 'qr-code', side: 'front',
-      content: 'https://example.com/attendee/REG-001234', qrContentSource: 'static',
+      content: 'https://www.example.com', qrContentSource: 'static',
       x: 30, y: 52, width: 40, height: 30 }),
     // Footer text
     el({ id: uuidv4(), type: 'text', side: 'front', content: '#YourEvent2025',
@@ -139,7 +139,7 @@ function createTemplateElements(): BadgeElement[] {
       fontSize: 14, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
     // QR Code
     el({ id: uuidv4(), type: 'qr-code', side: 'back',
-      content: 'https://example.com/attendee/REG-001234', qrContentSource: 'static',
+      content: 'https://www.example.com', qrContentSource: 'static',
       x: 30, y: 52, width: 40, height: 30 }),
     // Footer text
     el({ id: uuidv4(), type: 'text', side: 'back', content: '#YourEvent2025',
@@ -199,7 +199,7 @@ export function createDefaultElement(
     case 'image':
       return { ...base, height: 20, imageFit: 'contain', imageUrl: '' };
     case 'qr-code':
-      return { ...base, width: 25, height: 25, content: 'https://example.com', qrContentSource: 'static' };
+      return { ...base, width: 25, height: 25, content: 'https://www.example.com', qrContentSource: 'static' };
     case 'shape':
       return {
         ...base,

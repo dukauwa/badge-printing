@@ -18,8 +18,6 @@ import {
   ChevronRight,
   ImageIcon,
   Upload,
-  Link2,
-  Unlink,
 } from 'lucide-react';
 import { Badge, BadgeElement, BadgeElementType, BadgeSide, BadgeSegment, AttributeRule, BADGE_LAYOUTS, BADGE_SIDES_FOLDABLE, BADGE_SEGMENTS, SAMPLE_ATTENDEES } from '@/types/badge';
 import { getBadgeById, saveBadge, createDefaultElement, duplicateElement, syncFrontToBack } from '@/lib/badge-store';
@@ -353,8 +351,8 @@ export default function BadgeEditorPage({ params }: { params: Promise<{ id: stri
   return (
     <div className="flex flex-col h-[calc(100vh-96px)]">
       {/* Editor toolbar */}
-      <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-white shrink-0">
-        <div className="flex items-center gap-3">
+      <div className="relative flex items-center justify-between px-4 py-2 border-b border-gray-200 bg-white shrink-0">
+        <div className="flex items-center gap-3 z-10">
           <button
             onClick={() => router.push('/badge-designer')}
             className="p-1.5 rounded hover:bg-gray-100"
@@ -383,22 +381,24 @@ export default function BadgeEditorPage({ params }: { params: Promise<{ id: stri
           </div>
         </div>
 
-        {/* Center: Panel tabs + Front & Back same toggle */}
-        <div className="flex items-center gap-3">
+        {/* Center: Panel tabs + Mirror toggle — absolutely centered */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3">
           <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
-            {BADGE_SIDES_FOLDABLE
-              .filter((opt) => !badge.frontBackSame || opt.key === 'front')
-              .map((opt) => (
+            {BADGE_SIDES_FOLDABLE.map((opt) => (
               <button
                 key={opt.key}
+                disabled={badge.frontBackSame && opt.key === 'back'}
                 onClick={() => {
+                  if (badge.frontBackSame && opt.key === 'back') return;
                   setActiveSide(opt.key);
                   setSelectedElementId(null);
                 }}
                 className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                  activeSide === opt.key
-                    ? 'bg-white shadow-sm text-gray-900'
-                    : 'text-gray-500 hover:text-gray-700'
+                  badge.frontBackSame && opt.key === 'back'
+                    ? 'text-gray-300 cursor-not-allowed'
+                    : activeSide === opt.key
+                      ? 'bg-white shadow-sm text-gray-900'
+                      : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
                 {opt.label}
@@ -406,23 +406,29 @@ export default function BadgeEditorPage({ params }: { params: Promise<{ id: stri
             ))}
           </div>
 
-          {/* Front & Back are the same toggle */}
-          <button
-            onClick={handleToggleFrontBackSame}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-              badge.frontBackSame
-                ? 'bg-indigo-100 text-indigo-700 border border-indigo-300'
-                : 'border border-gray-200 text-gray-500 hover:bg-gray-50'
-            }`}
-            title={badge.frontBackSame ? 'Front & Back are synced' : 'Sync Front & Back'}
-          >
-            {badge.frontBackSame ? <Link2 size={14} /> : <Unlink size={14} />}
-            {badge.frontBackSame ? 'Front = Back' : 'Link sides'}
-          </button>
+          {/* Mirror front & back toggle */}
+          <label className="inline-flex items-center gap-2 cursor-pointer select-none" title="Back panel mirrors the front">
+            <span className="text-xs text-gray-500">Mirror sides</span>
+            <button
+              type="button"
+              role="switch"
+              aria-checked={!!badge.frontBackSame}
+              onClick={handleToggleFrontBackSame}
+              className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
+                badge.frontBackSame ? 'bg-indigo-600' : 'bg-gray-200'
+              }`}
+            >
+              <span
+                className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow-sm transition-transform ${
+                  badge.frontBackSame ? 'translate-x-[18px]' : 'translate-x-[3px]'
+                }`}
+              />
+            </button>
+          </label>
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1 z-10">
           {/* Preview toggle */}
           <button
             onClick={() => {
