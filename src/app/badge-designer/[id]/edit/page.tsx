@@ -9,9 +9,7 @@ import {
   Redo2,
   ZoomIn,
   ZoomOut,
-  Layers,
   SlidersHorizontal,
-  Puzzle,
   RotateCcw,
   Grid3X3,
   Eye,
@@ -20,16 +18,15 @@ import {
   ChevronRight,
   ImageIcon,
   Upload,
+  Link2,
+  Unlink,
 } from 'lucide-react';
 import { Badge, BadgeElement, BadgeElementType, BadgeSide, BadgeSegment, AttributeRule, BADGE_LAYOUTS, BADGE_SIDES_FOLDABLE, BADGE_SEGMENTS, SAMPLE_ATTENDEES } from '@/types/badge';
-import { getBadgeById, saveBadge, createDefaultElement, duplicateElement } from '@/lib/badge-store';
+import { getBadgeById, saveBadge, createDefaultElement, duplicateElement, syncFrontToBack } from '@/lib/badge-store';
 import BadgeCanvas from '@/components/badge-designer/BadgeCanvas';
 import ElementToolbox from '@/components/badge-designer/ElementToolbox';
 import PropertiesPanel from '@/components/badge-designer/PropertiesPanel';
-import LayersPanel from '@/components/badge-designer/LayersPanel';
 import BadgeSettingsPanel from '@/components/badge-designer/BadgeSettingsPanel';
-
-type LeftTab = 'elements' | 'layers';
 
 export default function BadgeEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -38,7 +35,6 @@ export default function BadgeEditorPage({ params }: { params: Promise<{ id: stri
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [activeSide, setActiveSide] = useState<BadgeSide>('front');
   const [zoom, setZoom] = useState(1);
-  const [leftTab, setLeftTab] = useState<LeftTab>('elements');
   const [history, setHistory] = useState<Badge[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
   const [saving, setSaving] = useState(false);
@@ -152,32 +148,54 @@ export default function BadgeEditorPage({ params }: { params: Promise<{ id: stri
     [updateBadge]
   );
 
+  const handleToggleFrontBackSame = useCallback(() => {
+    updateBadge((b) => {
+      const newValue = !b.frontBackSame;
+      let updated: Badge = { ...b, frontBackSame: newValue };
+      if (newValue) {
+        updated = syncFrontToBack(updated);
+      }
+      return updated;
+    });
+    setActiveSide('front');
+    setSelectedElementId(null);
+  }, [updateBadge]);
+
   const handleUpdateElement = useCallback(
     (elementId: string, updates: Partial<BadgeElement>) => {
-      updateBadge((b) => ({
-        ...b,
-        elements: b.elements.map((el) =>
-          el.id === elementId ? { ...el, ...updates } : el
-        ),
-      }));
+      updateBadge((b) => {
+        let updated: Badge = {
+          ...b,
+          elements: b.elements.map((el) =>
+            el.id === elementId ? { ...el, ...updates } : el
+          ),
+        };
+        if (updated.frontBackSame) {
+          updated = syncFrontToBack(updated);
+        }
+        return updated;
+      });
     },
     [updateBadge]
   );
 
   const handleAddElement = useCallback(
-    (type: BadgeElementType, subType?: string) => {
+    (type: BadgeElementType) => {
       const overrides: Partial<BadgeElement> = {};
-      if (subType && type === 'shape') {
-        overrides.shapeType = subType as 'rectangle' | 'circle' | 'line';
-      }
       const existingCount = badge?.elements.filter((el) => el.side === activeSide).length || 0;
       const stagger = (existingCount * 5) % 40;
       overrides.y = 5 + stagger;
       const newEl = createDefaultElement(type, activeSide, overrides);
-      updateBadge((b) => ({
-        ...b,
-        elements: [...b.elements, newEl],
-      }));
+      updateBadge((b) => {
+        let updated: Badge = {
+          ...b,
+          elements: [...b.elements, newEl],
+        };
+        if (updated.frontBackSame) {
+          updated = syncFrontToBack(updated);
+        }
+        return updated;
+      });
       setSelectedElementId(newEl.id);
     },
     [activeSide, updateBadge, badge]
@@ -197,10 +215,16 @@ export default function BadgeEditorPage({ params }: { params: Promise<{ id: stri
 
   const handleDeleteElement = useCallback(() => {
     if (!selectedElementId) return;
-    updateBadge((b) => ({
-      ...b,
-      elements: b.elements.filter((el) => el.id !== selectedElementId),
-    }));
+    updateBadge((b) => {
+      let updated: Badge = {
+        ...b,
+        elements: b.elements.filter((el) => el.id !== selectedElementId),
+      };
+      if (updated.frontBackSame) {
+        updated = syncFrontToBack(updated);
+      }
+      return updated;
+    });
     setSelectedElementId(null);
   }, [selectedElementId, updateBadge]);
 
@@ -209,50 +233,35 @@ export default function BadgeEditorPage({ params }: { params: Promise<{ id: stri
     const el = badge.elements.find((e) => e.id === selectedElementId);
     if (!el) return;
     const dup = duplicateElement(el);
-    updateBadge((b) => ({
-      ...b,
-      elements: [...b.elements, dup],
-    }));
+    updateBadge((b) => {
+      let updated: Badge = {
+        ...b,
+        elements: [...b.elements, dup],
+      };
+      if (updated.frontBackSame) {
+        updated = syncFrontToBack(updated);
+      }
+      return updated;
+    });
     setSelectedElementId(dup.id);
   }, [selectedElementId, badge, updateBadge]);
-
-  const handleReorderElements = useCallback(
-    (fromIndex: number, toIndex: number) => {
-      updateBadge((b) => {
-        const sideElements = b.elements.filter((el) => el.side === activeSide);
-        const otherElements = b.elements.filter((el) => el.side !== activeSide);
-        const reordered = [...sideElements];
-        const [moved] = reordered.splice(fromIndex, 1);
-        reordered.splice(toIndex, 0, moved);
-        return { ...b, elements: [...otherElements, ...reordered] };
-      });
-    },
-    [activeSide, updateBadge]
-  );
 
   // Background image handlers
   const handleSetPanelBackground = useCallback(
     (imageUrl: string) => {
-      updateBadge((b) => ({
-        ...b,
-        panelBackgrounds: {
-          ...b.panelBackgrounds,
-          [activeSide]: { imageUrl, fit: b.panelBackgrounds?.[activeSide]?.fit || 'cover' },
-        },
-      }));
-    },
-    [activeSide, updateBadge]
-  );
-
-  const handleSetPanelBackgroundFit = useCallback(
-    (fit: 'contain' | 'cover' | 'fill') => {
-      updateBadge((b) => ({
-        ...b,
-        panelBackgrounds: {
-          ...b.panelBackgrounds,
-          [activeSide]: { imageUrl: b.panelBackgrounds?.[activeSide]?.imageUrl || '', fit },
-        },
-      }));
+      updateBadge((b) => {
+        let updated: Badge = {
+          ...b,
+          panelBackgrounds: {
+            ...b.panelBackgrounds,
+            [activeSide]: { imageUrl, fit: b.panelBackgrounds?.[activeSide]?.fit || 'fill' },
+          },
+        };
+        if (updated.frontBackSame) {
+          updated = syncFrontToBack(updated);
+        }
+        return updated;
+      });
     },
     [activeSide, updateBadge]
   );
@@ -261,7 +270,11 @@ export default function BadgeEditorPage({ params }: { params: Promise<{ id: stri
     updateBadge((b) => {
       const bgs = { ...b.panelBackgrounds };
       delete bgs[activeSide];
-      return { ...b, panelBackgrounds: bgs };
+      let updated: Badge = { ...b, panelBackgrounds: bgs };
+      if (updated.frontBackSame) {
+        updated = syncFrontToBack(updated);
+      }
+      return updated;
     });
   }, [activeSide, updateBadge]);
 
@@ -370,24 +383,42 @@ export default function BadgeEditorPage({ params }: { params: Promise<{ id: stri
           </div>
         </div>
 
-        {/* Center: Panel tabs */}
-        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
-          {BADGE_SIDES_FOLDABLE.map((opt) => (
-            <button
-              key={opt.key}
-              onClick={() => {
-                setActiveSide(opt.key);
-                setSelectedElementId(null);
-              }}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-                activeSide === opt.key
-                  ? 'bg-white shadow-sm text-gray-900'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
+        {/* Center: Panel tabs + Front & Back same toggle */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+            {BADGE_SIDES_FOLDABLE
+              .filter((opt) => !badge.frontBackSame || opt.key === 'front')
+              .map((opt) => (
+              <button
+                key={opt.key}
+                onClick={() => {
+                  setActiveSide(opt.key);
+                  setSelectedElementId(null);
+                }}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
+                  activeSide === opt.key
+                    ? 'bg-white shadow-sm text-gray-900'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Front & Back are the same toggle */}
+          <button
+            onClick={handleToggleFrontBackSame}
+            className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors ${
+              badge.frontBackSame
+                ? 'bg-indigo-100 text-indigo-700 border border-indigo-300'
+                : 'border border-gray-200 text-gray-500 hover:bg-gray-50'
+            }`}
+            title={badge.frontBackSame ? 'Front & Back are synced' : 'Sync Front & Back'}
+          >
+            {badge.frontBackSame ? <Link2 size={14} /> : <Unlink size={14} />}
+            {badge.frontBackSame ? 'Front = Back' : 'Link sides'}
+          </button>
         </div>
 
         {/* Right: Actions */}
@@ -534,43 +565,8 @@ export default function BadgeEditorPage({ params }: { params: Promise<{ id: stri
         {/* Left sidebar — hidden in preview */}
         {!isPreview && (
           <div className="w-56 border-r border-gray-200 bg-white flex flex-col shrink-0">
-            <div className="flex border-b border-gray-200">
-              <button
-                onClick={() => setLeftTab('elements')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${
-                  leftTab === 'elements'
-                    ? 'text-indigo-600 border-b-2 border-indigo-600'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <Puzzle size={14} />
-                Elements
-              </button>
-              <button
-                onClick={() => setLeftTab('layers')}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium transition-colors ${
-                  leftTab === 'layers'
-                    ? 'text-indigo-600 border-b-2 border-indigo-600'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <Layers size={14} />
-                Layers
-              </button>
-            </div>
             <div className="flex-1 overflow-y-auto">
-              {leftTab === 'elements' ? (
-                <ElementToolbox onAddElement={handleAddElement} />
-              ) : (
-                <LayersPanel
-                  elements={badge.elements}
-                  activeSide={activeSide}
-                  selectedElementId={selectedElementId}
-                  onSelectElement={setSelectedElementId}
-                  onUpdateElement={handleUpdateElement}
-                  onReorderElements={handleReorderElements}
-                />
-              )}
+              <ElementToolbox onAddElement={handleAddElement} />
             </div>
           </div>
         )}
@@ -647,15 +643,6 @@ export default function BadgeEditorPage({ params }: { params: Promise<{ id: stri
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <select
-                      value={currentBg.fit || 'cover'}
-                      onChange={(e) => handleSetPanelBackgroundFit(e.target.value as 'contain' | 'cover' | 'fill')}
-                      className="w-full border border-gray-200 rounded-lg px-3 py-1.5 text-xs bg-white"
-                    >
-                      <option value="cover">Cover</option>
-                      <option value="contain">Contain</option>
-                      <option value="fill">Fill</option>
-                    </select>
                     <button
                       onClick={handleRemovePanelBackground}
                       className="text-xs text-red-500 hover:text-red-700"

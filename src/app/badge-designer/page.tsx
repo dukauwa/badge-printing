@@ -152,7 +152,7 @@ export default function BadgeDesignerPage() {
                     <div className="min-w-0 flex-1">
                       <h3 className="text-sm font-medium text-gray-900 truncate">{badge.name}</h3>
                       <p className="text-xs text-gray-500 mt-0.5">
-                        Foldable ticket &middot;{' '}
+                        Foldable Badge &middot;{' '}
                         {badge.elements.length} elements
                       </p>
                     </div>

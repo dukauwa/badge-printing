@@ -1,19 +1,56 @@
 'use client';
 
-import { Badge, BadgeElement, BadgeSide, BadgeSegment, AttributeRule, DEFAULT_ELEMENT_STYLES } from '@/types/badge';
+import { Badge, BadgeElement, BadgeSide, BadgeSegment, BadgeLayoutType, AttributeRule, DEFAULT_ELEMENT_STYLES } from '@/types/badge';
 import { v4 as uuidv4 } from 'uuid';
 
 const STORAGE_KEY = 'badge-printing-badges';
 
+function migrateBadge(badge: Badge): Badge {
+  // Migrate old layout type
+  if ((badge.layout as string) === 'foldable-ticket') {
+    badge.layout = 'foldable-badge' as BadgeLayoutType;
+  }
+  // Remove inside-left/inside-right elements
+  badge.elements = badge.elements.filter(el => el.side === 'front' || el.side === 'back');
+  // Remove inside-left/inside-right backgrounds
+  if (badge.panelBackgrounds) {
+    const { front, back } = badge.panelBackgrounds as Record<string, unknown>;
+    badge.panelBackgrounds = {};
+    if (front) (badge.panelBackgrounds as Record<string, unknown>).front = front;
+    if (back) (badge.panelBackgrounds as Record<string, unknown>).back = back;
+  }
+  return badge;
+}
+
+export function syncFrontToBack(badge: Badge): Badge {
+  const frontElements = badge.elements.filter(el => el.side === 'front');
+  const backCopies = frontElements.map(el => ({
+    ...el,
+    id: uuidv4(),
+    side: 'back' as BadgeSide,
+  }));
+  return {
+    ...badge,
+    elements: [...frontElements, ...backCopies],
+    panelBackgrounds: {
+      ...badge.panelBackgrounds,
+      back: badge.panelBackgrounds?.front ? { ...badge.panelBackgrounds.front } : undefined,
+    },
+  };
+}
+
 export function getAllBadges(): Badge[] {
   if (typeof window === 'undefined') return [];
   const data = localStorage.getItem(STORAGE_KEY);
-  return data ? JSON.parse(data) : [];
+  if (!data) return [];
+  const badges: Badge[] = JSON.parse(data);
+  return badges.map(migrateBadge);
 }
 
 export function getBadgeById(id: string): Badge | null {
   const badges = getAllBadges();
-  return badges.find((b) => b.id === id) || null;
+  const badge = badges.find((b) => b.id === id) || null;
+  return badge ? migrateBadge(badge) : null;
 }
 
 export function saveBadge(badge: Badge): Badge {
@@ -57,67 +94,57 @@ function createTemplateElements(): BadgeElement[] {
   return [
     // ──────────── FRONT PANEL ────────────
 
-    // Header bar (dark navy)
-    el({ id: uuidv4(), type: 'shape', side: 'front', shapeType: 'rectangle',
-      x: 0, y: 0, width: 100, height: 18, backgroundColor: '#1a1f3d', color: '#1a1f3d' }),
-    // Event logo placeholder (in header)
-    el({ id: uuidv4(), type: 'image', side: 'front',
-      x: 10, y: 2, width: 80, height: 14, imageUrl: '', imageFit: 'contain' }),
-    // Attendee Name
+    // Event title
+    el({ id: uuidv4(), type: 'text', side: 'front', content: 'Your Event 2025',
+      x: 5, y: 4, width: 90, height: 8,
+      fontSize: 18, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
+    // First Name
     el({ id: uuidv4(), type: 'dynamic-field', side: 'front', dynamicField: 'attendee_name',
-      content: 'JOHN DOE', x: 5, y: 24, width: 90, height: 10,
+      content: 'JOHN', x: 5, y: 20, width: 90, height: 10,
       fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
     // Job Title
     el({ id: uuidv4(), type: 'dynamic-field', side: 'front', dynamicField: 'attendee_title',
-      content: 'HR Manager', x: 10, y: 35, width: 80, height: 7,
+      content: 'HR Manager', x: 10, y: 32, width: 80, height: 7,
       fontSize: 14, fontWeight: 'normal', textAlign: 'center', color: '#4b5563' }),
     // Company
     el({ id: uuidv4(), type: 'dynamic-field', side: 'front', dynamicField: 'attendee_company',
-      content: 'idloom Inc.', x: 10, y: 42, width: 80, height: 7,
+      content: 'idloom Inc.', x: 10, y: 40, width: 80, height: 7,
       fontSize: 14, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
     // QR Code
     el({ id: uuidv4(), type: 'qr-code', side: 'front',
-      content: 'https://example.com/attendee/REG-001234',
-      x: 30, y: 54, width: 40, height: 30 }),
-    // Footer bar
-    el({ id: uuidv4(), type: 'shape', side: 'front', shapeType: 'rectangle',
-      x: 0, y: 90, width: 100, height: 10, backgroundColor: '#1a1f3d', color: '#1a1f3d' }),
+      content: 'https://example.com/attendee/REG-001234', qrContentSource: 'static',
+      x: 30, y: 52, width: 40, height: 30 }),
     // Footer text
     el({ id: uuidv4(), type: 'text', side: 'front', content: '#YourEvent2025',
-      x: 10, y: 91, width: 80, height: 8,
-      fontSize: 12, fontWeight: 'bold', textAlign: 'center', color: '#ffffff' }),
+      x: 10, y: 88, width: 80, height: 8,
+      fontSize: 12, fontWeight: 'bold', textAlign: 'center', color: '#4b5563' }),
 
-    // ──────────── BACK PANEL (same layout as front) ────────────
+    // ──────────── BACK PANEL ────────────
 
-    // Header bar (dark navy)
-    el({ id: uuidv4(), type: 'shape', side: 'back', shapeType: 'rectangle',
-      x: 0, y: 0, width: 100, height: 18, backgroundColor: '#1a1f3d', color: '#1a1f3d' }),
-    // Event logo placeholder (in header)
-    el({ id: uuidv4(), type: 'image', side: 'back',
-      x: 10, y: 2, width: 80, height: 14, imageUrl: '', imageFit: 'contain' }),
-    // Attendee Name
+    // Event title
+    el({ id: uuidv4(), type: 'text', side: 'back', content: 'Your Event 2025',
+      x: 5, y: 4, width: 90, height: 8,
+      fontSize: 18, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
+    // First Name
     el({ id: uuidv4(), type: 'dynamic-field', side: 'back', dynamicField: 'attendee_name',
-      content: 'JOHN DOE', x: 5, y: 24, width: 90, height: 10,
+      content: 'JOHN', x: 5, y: 20, width: 90, height: 10,
       fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
     // Job Title
     el({ id: uuidv4(), type: 'dynamic-field', side: 'back', dynamicField: 'attendee_title',
-      content: 'HR Manager', x: 10, y: 35, width: 80, height: 7,
+      content: 'HR Manager', x: 10, y: 32, width: 80, height: 7,
       fontSize: 14, fontWeight: 'normal', textAlign: 'center', color: '#4b5563' }),
     // Company
     el({ id: uuidv4(), type: 'dynamic-field', side: 'back', dynamicField: 'attendee_company',
-      content: 'idloom Inc.', x: 10, y: 42, width: 80, height: 7,
+      content: 'idloom Inc.', x: 10, y: 40, width: 80, height: 7,
       fontSize: 14, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
     // QR Code
     el({ id: uuidv4(), type: 'qr-code', side: 'back',
-      content: 'https://example.com/attendee/REG-001234',
-      x: 30, y: 54, width: 40, height: 30 }),
-    // Footer bar
-    el({ id: uuidv4(), type: 'shape', side: 'back', shapeType: 'rectangle',
-      x: 0, y: 90, width: 100, height: 10, backgroundColor: '#1a1f3d', color: '#1a1f3d' }),
+      content: 'https://example.com/attendee/REG-001234', qrContentSource: 'static',
+      x: 30, y: 52, width: 40, height: 30 }),
     // Footer text
     el({ id: uuidv4(), type: 'text', side: 'back', content: '#YourEvent2025',
-      x: 10, y: 91, width: 80, height: 8,
-      fontSize: 12, fontWeight: 'bold', textAlign: 'center', color: '#ffffff' }),
+      x: 10, y: 88, width: 80, height: 8,
+      fontSize: 12, fontWeight: 'bold', textAlign: 'center', color: '#4b5563' }),
   ];
 }
 
@@ -128,7 +155,7 @@ export function createNewBadge(name: string, segments: BadgeSegment[], attribute
     segments,
     attributeRules,
     isActive: false,
-    layout: 'foldable-ticket',
+    layout: 'foldable-badge',
     elements: createTemplateElements(),
     panelBackgrounds: {},
     createdAt: new Date().toISOString(),
@@ -164,7 +191,7 @@ export function createDefaultElement(
       return {
         ...base,
         dynamicField: 'attendee_name',
-        content: 'JOHN DOE',
+        content: 'JOHN',
         fontSize: 20,
         fontWeight: 'bold',
         height: 10,
@@ -172,7 +199,7 @@ export function createDefaultElement(
     case 'image':
       return { ...base, height: 20, imageFit: 'contain', imageUrl: '' };
     case 'qr-code':
-      return { ...base, width: 25, height: 25, content: 'https://example.com' };
+      return { ...base, width: 25, height: 25, content: 'https://example.com', qrContentSource: 'static' };
     case 'shape':
       return {
         ...base,

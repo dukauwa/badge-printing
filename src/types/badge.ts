@@ -1,4 +1,4 @@
-export type BadgeLayoutType = 'foldable-ticket';
+export type BadgeLayoutType = 'foldable-badge';
 
 export type BadgeSegment =
   | 'attendee'
@@ -58,13 +58,11 @@ export const ATTRIBUTE_VALUE_OPTIONS: string[] = [
 
 // --- End Attribute Segmentation ---
 
-export type BadgeSide = 'front' | 'back' | 'inside-left' | 'inside-right';
+export type BadgeSide = 'front' | 'back';
 
 export const BADGE_SIDES_FOLDABLE: { key: BadgeSide; label: string }[] = [
   { key: 'front', label: 'Front' },
   { key: 'back', label: 'Back' },
-  { key: 'inside-left', label: 'Inside Left' },
-  { key: 'inside-right', label: 'Inside Right' },
 ];
 
 export interface BadgeLayout {
@@ -80,14 +78,14 @@ export interface BadgeLayout {
 
 export const BADGE_LAYOUTS: BadgeLayout[] = [
   {
-    type: 'foldable-ticket',
-    label: 'Foldable ticket',
-    description: 'A4 folded into 4 panels',
+    type: 'foldable-badge',
+    label: 'Foldable Badge',
+    description: '2 printable panels: Front and Back',
     badgeWidth: 210,
     badgeHeight: 297,
     panelWidth: 105,
     panelHeight: 148.5,
-    pageDescription: 'A4 sheet folded in 4',
+    pageDescription: 'A4 sheet folded in 2',
   },
 ];
 
@@ -107,6 +105,8 @@ export type DynamicFieldKey =
   | 'event_date'
   | 'ticket_type'
   | 'registration_id';
+
+export type QrContentSource = 'static' | 'dynamic-field';
 
 export interface BadgeElement {
   id: string;
@@ -135,6 +135,8 @@ export interface BadgeElement {
   dynamicField?: DynamicFieldKey;
   shapeType?: 'rectangle' | 'circle' | 'line';
   opacity?: number;
+  qrContentSource?: QrContentSource;
+  qrDynamicField?: DynamicFieldKey;
 }
 
 export interface BadgePanelBackground {
@@ -154,6 +156,7 @@ export interface Badge {
   createdAt: string;
   updatedAt: string;
   thumbnail?: string;
+  frontBackSame?: boolean;
 }
 
 export interface AttendeeData {
@@ -188,7 +191,7 @@ export interface BadgeEditorState {
 }
 
 export const DYNAMIC_FIELD_OPTIONS: { key: DynamicFieldKey; label: string; preview: string }[] = [
-  { key: 'attendee_name', label: 'Attendee Name', preview: 'JOHN DOE' },
+  { key: 'attendee_name', label: 'First Name', preview: 'JOHN' },
   { key: 'attendee_title', label: 'Job Title', preview: 'HR Manager' },
   { key: 'attendee_company', label: 'Company', preview: 'idloom Inc.' },
   { key: 'attendee_email', label: 'Email', preview: 'john@example.com' },

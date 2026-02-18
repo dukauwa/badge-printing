@@ -3,11 +3,7 @@
 import React from 'react';
 import {
   Type,
-  Image,
   QrCode,
-  Square,
-  Circle,
-  Minus,
   Tag,
 } from 'lucide-react';
 import { BadgeElementType } from '@/types/badge';
@@ -22,11 +18,7 @@ interface ToolboxItem {
 const toolboxItems: ToolboxItem[] = [
   { type: 'text', label: 'Text', icon: <Type size={18} /> },
   { type: 'dynamic-field', label: 'Dynamic Field', icon: <Tag size={18} /> },
-  { type: 'image', label: 'Image', icon: <Image size={18} /> },
   { type: 'qr-code', label: 'QR Code', icon: <QrCode size={18} /> },
-  { type: 'shape', label: 'Rectangle', icon: <Square size={18} />, subType: 'rectangle' },
-  { type: 'shape', label: 'Circle', icon: <Circle size={18} />, subType: 'circle' },
-  { type: 'shape', label: 'Line', icon: <Minus size={18} />, subType: 'line' },
 ];
 
 interface ElementToolboxProps {

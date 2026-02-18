@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useRef, useCallback, useEffect, useState } from 'react';
-import { BadgeElement, BadgeSide, BadgePanelBackground, BADGE_LAYOUTS } from '@/types/badge';
+import { BadgeElement, BadgeSide, BadgePanelBackground, BADGE_LAYOUTS, DYNAMIC_FIELD_OPTIONS } from '@/types/badge';
 import BadgeElementRenderer from './BadgeElementRenderer';
 import ResizeHandles from './ResizeHandles';
 
@@ -59,7 +59,7 @@ export default function BadgeCanvas({
 
   const [inlineEdit, setInlineEdit] = useState<InlineEditState | null>(null);
 
-  const layoutConfig = BADGE_LAYOUTS[0]; // Only foldable-ticket now
+  const layoutConfig = BADGE_LAYOUTS[0]; // Only foldable-badge now
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -245,6 +245,14 @@ export default function BadgeCanvas({
 
   // Resolve dynamic fields for preview
   const resolveContent = (element: BadgeElement): string => {
+    if (element.type === 'qr-code' && element.qrContentSource === 'dynamic-field' && element.qrDynamicField) {
+      if (isPreview && previewAttendee) {
+        return previewAttendee[element.qrDynamicField] || element.content || '';
+      }
+      // In editor mode, show the preview text from DYNAMIC_FIELD_OPTIONS
+      const fieldOption = DYNAMIC_FIELD_OPTIONS.find((f) => f.key === element.qrDynamicField);
+      return fieldOption?.preview || element.content || '';
+    }
     if (isPreview && element.type === 'dynamic-field' && element.dynamicField && previewAttendee) {
       return previewAttendee[element.dynamicField] || element.content || '';
     }
