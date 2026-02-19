@@ -98,6 +98,7 @@ export type BadgeElementType =
 
 export type DynamicFieldKey =
   | 'attendee_name'
+  | 'attendee_last_name'
   | 'attendee_title'
   | 'attendee_company'
   | 'attendee_email'
@@ -125,6 +126,7 @@ export interface BadgeElement {
   fontWeight?: 'normal' | 'bold';
   fontFamily?: string;
   textAlign?: 'left' | 'center' | 'right';
+  textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
   color?: string;
   backgroundColor?: string;
   borderRadius?: number;
@@ -161,6 +163,7 @@ export interface Badge {
 
 export interface AttendeeData {
   attendee_name: string;
+  attendee_last_name: string;
   attendee_title: string;
   attendee_company: string;
   attendee_email: string;
@@ -171,12 +174,12 @@ export interface AttendeeData {
 }
 
 export const SAMPLE_ATTENDEES: AttendeeData[] = [
-  { attendee_name: 'John Doe', attendee_title: 'CEO', attendee_company: 'Acme Corp', attendee_email: 'john@acme.com', ticket_type: 'VIP', event_name: 'Annual Conference 2025', event_date: '20/03/2025', registration_id: 'REG-001234' },
-  { attendee_name: 'Jane Smith', attendee_title: 'CTO', attendee_company: 'TechStart', attendee_email: 'jane@techstart.io', ticket_type: 'General', event_name: 'Annual Conference 2025', event_date: '20/03/2025', registration_id: 'REG-001235' },
-  { attendee_name: 'Mike Johnson', attendee_title: 'Senior Product Designer', attendee_company: 'Creative Inc', attendee_email: 'mike@creative.co', ticket_type: 'Speaker', event_name: 'Annual Conference 2025', event_date: '20/03/2025', registration_id: 'REG-001236' },
-  { attendee_name: 'Sarah Williams', attendee_title: 'VP Marketing', attendee_company: 'GrowthCo', attendee_email: 'sarah@growthco.com', ticket_type: 'VIP', event_name: 'Annual Conference 2025', event_date: '20/03/2025', registration_id: 'REG-001237' },
-  { attendee_name: 'Dr. Alexandra Konstantinidis', attendee_title: 'Head of International Business Development', attendee_company: 'Mediterranean Ventures International', attendee_email: 'alexandra@medventures.gr', ticket_type: 'Speaker', event_name: 'Annual Conference 2025', event_date: '20/03/2025', registration_id: 'REG-001238' },
-  { attendee_name: 'Li Wei', attendee_title: 'Intern', attendee_company: 'StartupXYZ', attendee_email: 'li@startupxyz.com', ticket_type: 'General', event_name: 'Annual Conference 2025', event_date: '20/03/2025', registration_id: 'REG-001239' },
+  { attendee_name: 'John', attendee_last_name: 'Doe', attendee_title: 'CEO', attendee_company: 'Acme Corp', attendee_email: 'john@acme.com', ticket_type: 'VIP', event_name: 'Annual Conference 2025', event_date: '20/03/2025', registration_id: 'REG-001234' },
+  { attendee_name: 'Jane', attendee_last_name: 'Smith', attendee_title: 'CTO', attendee_company: 'TechStart', attendee_email: 'jane@techstart.io', ticket_type: 'General', event_name: 'Annual Conference 2025', event_date: '20/03/2025', registration_id: 'REG-001235' },
+  { attendee_name: 'Mike', attendee_last_name: 'Johnson', attendee_title: 'Senior Product Designer', attendee_company: 'Creative Inc', attendee_email: 'mike@creative.co', ticket_type: 'Speaker', event_name: 'Annual Conference 2025', event_date: '20/03/2025', registration_id: 'REG-001236' },
+  { attendee_name: 'Sarah', attendee_last_name: 'Williams', attendee_title: 'VP Marketing', attendee_company: 'GrowthCo', attendee_email: 'sarah@growthco.com', ticket_type: 'VIP', event_name: 'Annual Conference 2025', event_date: '20/03/2025', registration_id: 'REG-001237' },
+  { attendee_name: 'Alexandra', attendee_last_name: 'Konstantinidis', attendee_title: 'Head of International Business Development', attendee_company: 'Mediterranean Ventures International', attendee_email: 'alexandra@medventures.gr', ticket_type: 'Speaker', event_name: 'Annual Conference 2025', event_date: '20/03/2025', registration_id: 'REG-001238' },
+  { attendee_name: 'Li', attendee_last_name: 'Wei', attendee_title: 'Intern', attendee_company: 'StartupXYZ', attendee_email: 'li@startupxyz.com', ticket_type: 'General', event_name: 'Annual Conference 2025', event_date: '20/03/2025', registration_id: 'REG-001239' },
 ];
 
 export interface BadgeEditorState {
@@ -191,7 +194,8 @@ export interface BadgeEditorState {
 }
 
 export const DYNAMIC_FIELD_OPTIONS: { key: DynamicFieldKey; label: string; preview: string }[] = [
-  { key: 'attendee_name', label: 'First Name', preview: 'JOHN' },
+  { key: 'attendee_name', label: 'First Name', preview: 'John' },
+  { key: 'attendee_last_name', label: 'Last Name', preview: 'Doe' },
   { key: 'attendee_title', label: 'Job Title', preview: 'HR Manager' },
   { key: 'attendee_company', label: 'Company', preview: 'idloom Inc.' },
   { key: 'attendee_email', label: 'Email', preview: 'john@example.com' },
@@ -206,6 +210,7 @@ export const DEFAULT_ELEMENT_STYLES: Partial<BadgeElement> = {
   fontWeight: 'normal',
   fontFamily: 'Inter',
   textAlign: 'center',
+  textTransform: 'none',
   color: '#000000',
   backgroundColor: 'transparent',
   borderRadius: 0,

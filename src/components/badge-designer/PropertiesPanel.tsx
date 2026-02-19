@@ -12,6 +12,7 @@ import {
   AlignCenter,
   AlignRight,
   Bold,
+  CaseSensitive,
   ChevronDown,
 } from 'lucide-react';
 import { BadgeElement, DYNAMIC_FIELD_OPTIONS, DynamicFieldKey } from '@/types/badge';
@@ -180,8 +181,24 @@ export default function PropertiesPanel({
                   ? 'border-indigo-300 bg-indigo-50 text-indigo-600'
                   : 'border-gray-200 text-gray-500 hover:bg-gray-50'
               }`}
+              title="Bold"
             >
               <Bold size={14} />
+            </button>
+            <button
+              onClick={() =>
+                onUpdate({
+                  textTransform: element.textTransform === 'uppercase' ? 'none' : 'uppercase',
+                })
+              }
+              className={`p-2 rounded border ${
+                element.textTransform === 'uppercase'
+                  ? 'border-indigo-300 bg-indigo-50 text-indigo-600'
+                  : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+              }`}
+              title="Uppercase"
+            >
+              <span className="text-xs font-bold leading-none" style={{ fontSize: '11px' }}>AA</span>
             </button>
           </div>
           <div className="flex items-center gap-1">
@@ -208,14 +225,25 @@ export default function PropertiesPanel({
 
       {/* QR Code */}
       {element.type === 'qr-code' && (
-        <Section title="QR Code URL">
-          <input
-            type="url"
-            value={element.content || ''}
-            onChange={(e) => onUpdate({ content: e.target.value })}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-            placeholder="https://www.example.com"
-          />
+        <Section title="QR Code Content">
+          <select
+            value={element.qrDynamicField || 'registration_id'}
+            onChange={(e) => {
+              const key = e.target.value as DynamicFieldKey;
+              const field = DYNAMIC_FIELD_OPTIONS.find((f) => f.key === key);
+              onUpdate({ qrDynamicField: key, qrContentSource: 'dynamic-field', content: field?.preview });
+            }}
+            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
+          >
+            {DYNAMIC_FIELD_OPTIONS.map((f) => (
+              <option key={f.key} value={f.key}>
+                {f.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-400">
+            QR code will encode the selected field for each attendee.
+          </p>
         </Section>
       )}
     </div>

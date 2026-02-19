@@ -144,12 +144,18 @@ export default function NewBadgePage() {
 function FoldableBadgePreview() {
   return (
     <svg width="80" height="110" viewBox="0 0 100 130" fill="none" className="shrink-0">
+      {/* A4 sheet outline */}
       <rect x="10" y="5" width="80" height="120" rx="2" stroke="#d1d5db" strokeWidth="1" fill="white" />
-      <line x1="50" y1="5" x2="50" y2="125" stroke="#d1d5db" strokeWidth="0.5" strokeDasharray="3 2" />
-      <rect x="15" y="15" width="30" height="100" rx="1" stroke="#e5e7eb" strokeWidth="0.5" fill="#fafafa" />
-      <rect x="55" y="15" width="30" height="100" rx="1" stroke="#e5e7eb" strokeWidth="0.5" fill="#fafafa" />
-      <text x="30" y="70" textAnchor="middle" fontSize="8" fill="#9ca3af">Front</text>
-      <text x="70" y="70" textAnchor="middle" fontSize="8" fill="#9ca3af">Back</text>
+      {/* Horizontal fold line at halfway */}
+      <line x1="10" y1="65" x2="90" y2="65" stroke="#d1d5db" strokeWidth="0.5" strokeDasharray="3 2" />
+      {/* Vertical divider in top half */}
+      <line x1="50" y1="5" x2="50" y2="65" stroke="#d1d5db" strokeWidth="0.5" strokeDasharray="3 2" />
+      {/* Front panel — top-left quarter */}
+      <rect x="15" y="12" width="30" height="46" rx="1" stroke="#e5e7eb" strokeWidth="0.5" fill="#fafafa" />
+      {/* Back panel — top-right quarter */}
+      <rect x="55" y="12" width="30" height="46" rx="1" stroke="#e5e7eb" strokeWidth="0.5" fill="#fafafa" />
+      <text x="30" y="39" textAnchor="middle" fontSize="8" fill="#9ca3af">Front</text>
+      <text x="70" y="39" textAnchor="middle" fontSize="8" fill="#9ca3af">Back</text>
     </svg>
   );
 }

@@ -33,6 +33,7 @@ export default function BadgeElementRenderer({ element, isPreview }: BadgeElemen
             fontFamily: element.fontFamily || 'Inter',
             color: element.color || '#000000',
             textAlign: element.textAlign || 'center',
+            textTransform: element.textTransform || 'none',
             padding: '2px 4px',
             lineHeight: 1.3,
             wordBreak: 'break-word',
@@ -56,6 +57,7 @@ export default function BadgeElementRenderer({ element, isPreview }: BadgeElemen
             fontFamily: element.fontFamily || 'Inter',
             color: element.color || '#000000',
             textAlign: element.textAlign || 'center',
+            textTransform: element.textTransform || 'none',
             padding: '2px 4px',
             lineHeight: 1.3,
           }}
@@ -91,16 +93,21 @@ export default function BadgeElementRenderer({ element, isPreview }: BadgeElemen
         </div>
       );
 
-    case 'qr-code':
+    case 'qr-code': {
+      const qrField = DYNAMIC_FIELD_OPTIONS.find((f) => f.key === (element.qrDynamicField || 'registration_id'));
+      const qrValue = isPreview
+        ? (element.content || qrField?.preview || 'REG-001234')
+        : (qrField?.preview || 'REG-001234');
       return (
         <div style={{ ...baseStyle, padding: '4px' }}>
           <QRCodeSVG
-            value={element.content || 'https://example.com'}
+            value={qrValue}
             size={200}
             style={{ width: '100%', height: '100%' }}
           />
         </div>
       );
+    }
 
     case 'shape':
       if (element.shapeType === 'circle') {

@@ -91,60 +91,32 @@ function el(overrides: Partial<BadgeElement> & { id: string; type: BadgeElement[
 }
 
 function createTemplateElements(): BadgeElement[] {
+  const makeSide = (side: BadgeSide): BadgeElement[] => [
+    // First Name
+    el({ id: uuidv4(), type: 'dynamic-field', side, dynamicField: 'attendee_name',
+      content: 'John', x: 5, y: 16, width: 90, height: 8,
+      fontSize: 28, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
+    // Last Name
+    el({ id: uuidv4(), type: 'dynamic-field', side, dynamicField: 'attendee_last_name',
+      content: 'Doe', x: 5, y: 27, width: 90, height: 8,
+      fontSize: 28, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
+    // Job Title
+    el({ id: uuidv4(), type: 'dynamic-field', side, dynamicField: 'attendee_title',
+      content: 'HR Manager', x: 10, y: 38, width: 80, height: 5,
+      fontSize: 14, fontWeight: 'normal', textAlign: 'center', color: '#6b7280' }),
+    // Company
+    el({ id: uuidv4(), type: 'dynamic-field', side, dynamicField: 'attendee_company',
+      content: 'idloom Inc.', x: 10, y: 45, width: 80, height: 5,
+      fontSize: 15, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
+    // QR Code
+    el({ id: uuidv4(), type: 'qr-code', side,
+      content: 'REG-001234', qrContentSource: 'dynamic-field', qrDynamicField: 'registration_id',
+      x: 27, y: 54, width: 46, height: 28 }),
+  ];
+
   return [
-    // ──────────── FRONT PANEL ────────────
-
-    // Event title
-    el({ id: uuidv4(), type: 'text', side: 'front', content: 'Your Event 2025',
-      x: 5, y: 4, width: 90, height: 8,
-      fontSize: 18, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
-    // First Name
-    el({ id: uuidv4(), type: 'dynamic-field', side: 'front', dynamicField: 'attendee_name',
-      content: 'JOHN', x: 5, y: 20, width: 90, height: 10,
-      fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
-    // Job Title
-    el({ id: uuidv4(), type: 'dynamic-field', side: 'front', dynamicField: 'attendee_title',
-      content: 'HR Manager', x: 10, y: 32, width: 80, height: 7,
-      fontSize: 14, fontWeight: 'normal', textAlign: 'center', color: '#4b5563' }),
-    // Company
-    el({ id: uuidv4(), type: 'dynamic-field', side: 'front', dynamicField: 'attendee_company',
-      content: 'idloom Inc.', x: 10, y: 40, width: 80, height: 7,
-      fontSize: 14, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
-    // QR Code
-    el({ id: uuidv4(), type: 'qr-code', side: 'front',
-      content: 'https://www.example.com', qrContentSource: 'static',
-      x: 30, y: 52, width: 40, height: 30 }),
-    // Footer text
-    el({ id: uuidv4(), type: 'text', side: 'front', content: '#YourEvent2025',
-      x: 10, y: 88, width: 80, height: 8,
-      fontSize: 12, fontWeight: 'bold', textAlign: 'center', color: '#4b5563' }),
-
-    // ──────────── BACK PANEL ────────────
-
-    // Event title
-    el({ id: uuidv4(), type: 'text', side: 'back', content: 'Your Event 2025',
-      x: 5, y: 4, width: 90, height: 8,
-      fontSize: 18, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
-    // First Name
-    el({ id: uuidv4(), type: 'dynamic-field', side: 'back', dynamicField: 'attendee_name',
-      content: 'JOHN', x: 5, y: 20, width: 90, height: 10,
-      fontSize: 24, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
-    // Job Title
-    el({ id: uuidv4(), type: 'dynamic-field', side: 'back', dynamicField: 'attendee_title',
-      content: 'HR Manager', x: 10, y: 32, width: 80, height: 7,
-      fontSize: 14, fontWeight: 'normal', textAlign: 'center', color: '#4b5563' }),
-    // Company
-    el({ id: uuidv4(), type: 'dynamic-field', side: 'back', dynamicField: 'attendee_company',
-      content: 'idloom Inc.', x: 10, y: 40, width: 80, height: 7,
-      fontSize: 14, fontWeight: 'bold', textAlign: 'center', color: '#1a1f3d' }),
-    // QR Code
-    el({ id: uuidv4(), type: 'qr-code', side: 'back',
-      content: 'https://www.example.com', qrContentSource: 'static',
-      x: 30, y: 52, width: 40, height: 30 }),
-    // Footer text
-    el({ id: uuidv4(), type: 'text', side: 'back', content: '#YourEvent2025',
-      x: 10, y: 88, width: 80, height: 8,
-      fontSize: 12, fontWeight: 'bold', textAlign: 'center', color: '#4b5563' }),
+    ...makeSide('front'),
+    ...makeSide('back'),
   ];
 }
 
@@ -191,7 +163,7 @@ export function createDefaultElement(
       return {
         ...base,
         dynamicField: 'attendee_name',
-        content: 'JOHN',
+        content: 'John',
         fontSize: 20,
         fontWeight: 'bold',
         height: 10,
@@ -199,7 +171,7 @@ export function createDefaultElement(
     case 'image':
       return { ...base, height: 20, imageFit: 'contain', imageUrl: '' };
     case 'qr-code':
-      return { ...base, width: 25, height: 25, content: 'https://www.example.com', qrContentSource: 'static' };
+      return { ...base, width: 25, height: 25, content: 'REG-001234', qrContentSource: 'dynamic-field', qrDynamicField: 'registration_id' };
     case 'shape':
       return {
         ...base,
