@@ -86,7 +86,7 @@ body {
   background-color: rgba(99, 102, 241, 0.05);
 }
 
-/* Fold line for foldable tickets */
+/* Fold line for foldable badges */
 .fold-line {
   position: absolute;
   left: 0;

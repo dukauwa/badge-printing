@@ -3,14 +3,17 @@
 import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Plus, MoreVertical, Pencil, Trash2, Copy } from 'lucide-react';
+import { Plus, MoreVertical, Pencil, Trash2, Copy, LayoutGrid, List, Eye } from 'lucide-react';
 import { Badge, BADGE_SEGMENTS } from '@/types/badge';
 import { getAllBadges, deleteBadge, saveBadge } from '@/lib/badge-store';
 import { v4 as uuidv4 } from 'uuid';
 
+type ViewMode = 'list' | 'grid';
+
 export default function BadgeDesignerPage() {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -57,13 +60,41 @@ export default function BadgeDesignerPage() {
             Create and manage badge designs for your event attendees.
           </p>
         </div>
-        <Link
-          href="/badge-designer/new"
-          className="inline-flex items-center gap-2 bg-gray-900 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
-        >
-          <Plus size={16} />
-          New Badge
-        </Link>
+        <div className="flex items-center gap-3">
+          {badges.length > 0 && (
+            <div className="flex items-center bg-gray-100 rounded-lg p-0.5">
+              <button
+                onClick={() => setViewMode('list')}
+                className={`p-1.5 rounded-md transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-400 hover:text-gray-600'
+                }`}
+                title="List view"
+              >
+                <List size={16} />
+              </button>
+              <button
+                onClick={() => setViewMode('grid')}
+                className={`p-1.5 rounded-md transition-colors ${
+                  viewMode === 'grid'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-400 hover:text-gray-600'
+                }`}
+                title="Grid view"
+              >
+                <LayoutGrid size={16} />
+              </button>
+            </div>
+          )}
+          <Link
+            href="/badge-designer/new"
+            className="inline-flex items-center gap-2 bg-gray-900 text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+          >
+            <Plus size={16} />
+            New Badge
+          </Link>
+        </div>
       </div>
 
       {badges.length === 0 ? (
@@ -91,7 +122,115 @@ export default function BadgeDesignerPage() {
             Create Your First Badge
           </Link>
         </div>
+      ) : viewMode === 'list' ? (
+        /* ─── LIST VIEW ─── */
+        <div className="mt-6 border border-gray-200 rounded-xl overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">
+                  Badge Name
+                </th>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">
+                  Ticket Types
+                </th>
+                <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">
+                  Status
+                </th>
+                <th className="text-right text-xs font-medium text-gray-500 uppercase tracking-wider px-5 py-3">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {badges.map((badge) => (
+                <tr
+                  key={badge.id}
+                  className={`hover:bg-gray-50 transition-colors ${
+                    badge.isActive === false ? 'opacity-60' : ''
+                  }`}
+                >
+                  {/* Badge Name */}
+                  <td className="px-5 py-3.5">
+                    <span className="text-sm font-medium text-gray-900">{badge.name}</span>
+                  </td>
+
+                  {/* Ticket Types / Segments */}
+                  <td className="px-5 py-3.5">
+                    <div className="flex flex-wrap gap-1">
+                      {badge.segments && badge.segments.length > 0 ? (
+                        badge.segments.map((segKey) => {
+                          const seg = BADGE_SEGMENTS.find((s) => s.key === segKey);
+                          return seg ? (
+                            <span
+                              key={segKey}
+                              className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold text-white"
+                              style={{ backgroundColor: seg.color }}
+                            >
+                              {seg.label}
+                            </span>
+                          ) : null;
+                        })
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
+                    </div>
+                  </td>
+
+                  {/* Status */}
+                  <td className="px-5 py-3.5">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${
+                        badge.isActive === false
+                          ? 'bg-gray-100 text-gray-500'
+                          : 'bg-green-50 text-green-700'
+                      }`}
+                    >
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          badge.isActive === false ? 'bg-gray-400' : 'bg-green-500'
+                        }`}
+                      />
+                      {badge.isActive === false ? 'Inactive' : 'Active'}
+                    </span>
+                  </td>
+
+                  {/* Actions */}
+                  <td className="px-5 py-3.5">
+                    <div className="flex items-center justify-end gap-1">
+                      <button
+                        onClick={() => router.push(`/badge-designer/${badge.id}/edit`)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                        title="Edit"
+                      >
+                        <Pencil size={13} />
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => router.push(`/badge-designer/${badge.id}/print`)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-700 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                        title="Preview"
+                      >
+                        <Eye size={13} />
+                        Preview
+                      </button>
+                      <button
+                        onClick={() => handleDelete(badge.id)}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-red-600 bg-white border border-gray-200 rounded-lg hover:bg-red-50 hover:border-red-200 transition-colors"
+                        title="Delete"
+                      >
+                        <Trash2 size={13} />
+                        Delete
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (
+        /* ─── GRID VIEW ─── */
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mt-8">
           {badges.map((badge) => {
             return (
@@ -152,7 +291,7 @@ export default function BadgeDesignerPage() {
                     <div className="min-w-0 flex-1">
                       <h3 className="text-sm font-medium text-gray-900 truncate">{badge.name}</h3>
                       <p className="text-xs text-gray-500 mt-0.5">
-                        Foldable ticket &middot;{' '}
+                        Foldable Badge &middot;{' '}
                         {badge.elements.length} elements
                       </p>
                     </div>

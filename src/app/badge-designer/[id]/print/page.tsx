@@ -37,6 +37,9 @@ export default function PrintBadgePage({ params }: { params: Promise<{ id: strin
     if (element.type === 'dynamic-field' && element.dynamicField) {
       return attendee[element.dynamicField as keyof AttendeeData] || element.content || '';
     }
+    if (element.type === 'qr-code' && element.qrContentSource === 'dynamic-field' && element.qrDynamicField) {
+      return attendee[element.qrDynamicField as keyof AttendeeData] || element.content || '';
+    }
     return element.content || '';
   };
 
@@ -59,8 +62,11 @@ export default function PrintBadgePage({ params }: { params: Promise<{ id: strin
     );
   };
 
-  const getElements = (side: BadgeSide) =>
-    badge.elements.filter((el) => el.side === side && el.visible);
+  const getElements = (side: BadgeSide) => {
+    // When frontBackSame is ON, use front elements for both panels
+    const effectiveSide = badge.frontBackSame && side === 'back' ? 'front' : side;
+    return badge.elements.filter((el) => el.side === effectiveSide && el.visible);
+  };
 
   const renderBadge = (attendee: AttendeeData, index: number) => {
     const panelW = layoutConfig.panelWidth * pxPerMm;
@@ -86,24 +92,17 @@ export default function PrintBadgePage({ params }: { params: Promise<{ id: strin
       <div key={index} className="print-badge inline-block mb-4 break-inside-avoid">
         <div
           style={{
-            width: sheetW + 1,
-            height: sheetH + 1,
+            width: panelW * 2 + 1,
+            height: panelH + 1,
             display: 'grid',
             gridTemplateColumns: `${panelW}px 1px ${panelW}px`,
-            gridTemplateRows: `${panelH}px 1px ${panelH}px`,
+            gridTemplateRows: `${panelH}px`,
             border: '1px solid #e5e7eb',
           }}
         >
-          {/* Row 1 */}
           {renderPanel('front')}
           <div style={{ borderLeft: '1px dashed #d1d5db' }} />
           {renderPanel('back')}
-          {/* Horizontal fold */}
-          <div style={{ gridColumn: '1 / -1', borderTop: '1px dashed #d1d5db' }} />
-          {/* Row 2 */}
-          {renderPanel('inside-left')}
-          <div style={{ borderLeft: '1px dashed #d1d5db' }} />
-          {renderPanel('inside-right')}
         </div>
       </div>
     );

@@ -113,12 +113,12 @@ export default function NewBadgePage() {
           {/* Layout info */}
           <div className="bg-gray-50 rounded-xl p-5 border border-gray-200 mb-8">
             <div className="flex items-start gap-4">
-              <FoldableTicketPreview />
+              <FoldableBadgePreview />
               <div>
-                <h3 className="text-sm font-semibold text-gray-900">Foldable Ticket</h3>
-                <p className="text-xs text-gray-500 mt-0.5">A4 sheet folded in 4 &middot; 210 x 297mm</p>
+                <h3 className="text-sm font-semibold text-gray-900">Foldable Badge</h3>
+                <p className="text-xs text-gray-500 mt-0.5">A4 sheet &middot; 210 x 297mm</p>
                 <p className="text-xs text-gray-400 mt-2">
-                  4 printable panels: Front, Back, Inside Left, Inside Right.
+                  2 printable panels: Front and Back.
                   Your badge starts from a template — customise each panel to match your event.
                 </p>
               </div>
@@ -141,15 +141,21 @@ export default function NewBadgePage() {
   );
 }
 
-function FoldableTicketPreview() {
+function FoldableBadgePreview() {
   return (
     <svg width="80" height="110" viewBox="0 0 100 130" fill="none" className="shrink-0">
+      {/* A4 sheet outline */}
       <rect x="10" y="5" width="80" height="120" rx="2" stroke="#d1d5db" strokeWidth="1" fill="white" />
-      <rect x="15" y="10" width="33" height="50" rx="1" stroke="#e5e7eb" strokeWidth="0.5" fill="#fafafa" />
-      <rect x="52" y="10" width="33" height="50" rx="1" stroke="#e5e7eb" strokeWidth="0.5" fill="#fafafa" />
+      {/* Horizontal fold line at halfway */}
       <line x1="10" y1="65" x2="90" y2="65" stroke="#d1d5db" strokeWidth="0.5" strokeDasharray="3 2" />
-      <rect x="15" y="70" width="33" height="50" rx="1" stroke="#e5e7eb" strokeWidth="0.5" fill="#fafafa" />
-      <rect x="52" y="70" width="33" height="50" rx="1" stroke="#e5e7eb" strokeWidth="0.5" fill="#fafafa" />
+      {/* Vertical divider in top half */}
+      <line x1="50" y1="5" x2="50" y2="65" stroke="#d1d5db" strokeWidth="0.5" strokeDasharray="3 2" />
+      {/* Front panel — top-left quarter */}
+      <rect x="15" y="12" width="30" height="46" rx="1" stroke="#e5e7eb" strokeWidth="0.5" fill="#fafafa" />
+      {/* Back panel — top-right quarter */}
+      <rect x="55" y="12" width="30" height="46" rx="1" stroke="#e5e7eb" strokeWidth="0.5" fill="#fafafa" />
+      <text x="30" y="39" textAnchor="middle" fontSize="8" fill="#9ca3af">Front</text>
+      <text x="70" y="39" textAnchor="middle" fontSize="8" fill="#9ca3af">Back</text>
     </svg>
   );
 }

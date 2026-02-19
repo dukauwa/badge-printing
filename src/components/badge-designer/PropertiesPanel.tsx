@@ -12,6 +12,7 @@ import {
   AlignCenter,
   AlignRight,
   Bold,
+  CaseSensitive,
   ChevronDown,
 } from 'lucide-react';
 import { BadgeElement, DYNAMIC_FIELD_OPTIONS, DynamicFieldKey } from '@/types/badge';
@@ -99,14 +100,16 @@ export default function PropertiesPanel({
 
       {/* Position & Size */}
       <Section title="Position & Size">
+        {element.type !== 'qr-code' && (
+          <div className="grid grid-cols-2 gap-2">
+            <NumberInput label="X %" value={element.x} onChange={(v) => onUpdate({ x: v })} min={0} max={100} step={0.5} />
+            <NumberInput label="Y %" value={element.y} onChange={(v) => onUpdate({ y: v })} min={0} max={100} step={0.5} />
+          </div>
+        )}
         <div className="grid grid-cols-2 gap-2">
-          <NumberInput label="X %" value={element.x} onChange={(v) => onUpdate({ x: v })} min={0} max={100} step={0.5} />
-          <NumberInput label="Y %" value={element.y} onChange={(v) => onUpdate({ y: v })} min={0} max={100} step={0.5} />
           <NumberInput label="W %" value={element.width} onChange={(v) => onUpdate({ width: v })} min={1} max={100} step={0.5} />
           <NumberInput label="H %" value={element.height} onChange={(v) => onUpdate({ height: v })} min={1} max={100} step={0.5} />
         </div>
-        <NumberInput label="Rotation" value={element.rotation} onChange={(v) => onUpdate({ rotation: v })} min={-180} max={180} step={1} suffix="deg" />
-        <NumberInput label="Opacity" value={(element.opacity ?? 1) * 100} onChange={(v) => onUpdate({ opacity: v / 100 })} min={0} max={100} step={5} suffix="%" />
       </Section>
 
       {/* Dynamic field selector */}
@@ -178,8 +181,24 @@ export default function PropertiesPanel({
                   ? 'border-indigo-300 bg-indigo-50 text-indigo-600'
                   : 'border-gray-200 text-gray-500 hover:bg-gray-50'
               }`}
+              title="Bold"
             >
               <Bold size={14} />
+            </button>
+            <button
+              onClick={() =>
+                onUpdate({
+                  textTransform: element.textTransform === 'uppercase' ? 'none' : 'uppercase',
+                })
+              }
+              className={`p-2 rounded border ${
+                element.textTransform === 'uppercase'
+                  ? 'border-indigo-300 bg-indigo-50 text-indigo-600'
+                  : 'border-gray-200 text-gray-500 hover:bg-gray-50'
+              }`}
+              title="Uppercase"
+            >
+              <span className="text-xs font-bold leading-none" style={{ fontSize: '11px' }}>AA</span>
             </button>
           </div>
           <div className="flex items-center gap-1">
@@ -204,65 +223,29 @@ export default function PropertiesPanel({
         </Section>
       )}
 
-      {/* Image properties */}
-      {element.type === 'image' && (
-        <Section title="Image">
-          <input
-            type="text"
-            value={element.imageUrl || ''}
-            onChange={(e) => onUpdate({ imageUrl: e.target.value })}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-            placeholder="Image URL..."
-          />
-          <select
-            value={element.imageFit || 'contain'}
-            onChange={(e) => onUpdate({ imageFit: e.target.value as 'contain' | 'cover' | 'fill' })}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
-          >
-            <option value="contain">Contain</option>
-            <option value="cover">Cover</option>
-            <option value="fill">Fill</option>
-          </select>
-        </Section>
-      )}
-
       {/* QR Code */}
       {element.type === 'qr-code' && (
         <Section title="QR Code Content">
-          <input
-            type="text"
-            value={element.content || ''}
-            onChange={(e) => onUpdate({ content: e.target.value })}
-            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-            placeholder="URL or text for QR code..."
-          />
-        </Section>
-      )}
-
-      {/* Shape properties */}
-      {element.type === 'shape' && (
-        <Section title="Shape">
           <select
-            value={element.shapeType || 'rectangle'}
-            onChange={(e) => onUpdate({ shapeType: e.target.value as 'rectangle' | 'circle' | 'line' })}
+            value={element.qrDynamicField || 'registration_id'}
+            onChange={(e) => {
+              const key = e.target.value as DynamicFieldKey;
+              const field = DYNAMIC_FIELD_OPTIONS.find((f) => f.key === key);
+              onUpdate({ qrDynamicField: key, qrContentSource: 'dynamic-field', content: field?.preview });
+            }}
             className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white"
           >
-            <option value="rectangle">Rectangle</option>
-            <option value="circle">Circle</option>
-            <option value="line">Line</option>
+            {DYNAMIC_FIELD_OPTIONS.map((f) => (
+              <option key={f.key} value={f.key}>
+                {f.label}
+              </option>
+            ))}
           </select>
+          <p className="text-xs text-gray-400">
+            QR code will encode the selected field for each attendee.
+          </p>
         </Section>
       )}
-
-      {/* Background & Border */}
-      <Section title="Style">
-        <ColorInput label="Background" value={element.backgroundColor || 'transparent'} onChange={(v) => onUpdate({ backgroundColor: v })} />
-        <NumberInput label="Border Radius" value={element.borderRadius || 0} onChange={(v) => onUpdate({ borderRadius: v })} min={0} max={100} step={1} suffix="px" />
-        <NumberInput label="Border Width" value={element.borderWidth || 0} onChange={(v) => onUpdate({ borderWidth: v })} min={0} max={10} step={1} suffix="px" />
-        {(element.borderWidth || 0) > 0 && (
-          <ColorInput label="Border Color" value={element.borderColor || '#000000'} onChange={(v) => onUpdate({ borderColor: v })} />
-        )}
-      </Section>
     </div>
   );
 }
